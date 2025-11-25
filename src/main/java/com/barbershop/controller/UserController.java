@@ -16,22 +16,30 @@ import java.util.*;
 @RequestMapping("/user")
 public class UserController {
 
-    @Autowired private KhachHangRepository khRepo;
-    @Autowired private LichHenRepository lichHenRepo;
-    @Autowired private LichHenDichVuRepository lhDvRepo;
+    @Autowired
+    private KhachHangRepository khRepo;
+    @Autowired
+    private LichHenRepository lichHenRepo;
+    @Autowired
+    private LichHenDichVuRepository lhDvRepo;
 
     // ===================== USER HOME ======================
     @GetMapping("/home")
     public String userHome(HttpSession session, Model model) {
 
         Account acc = (Account) session.getAttribute("user");
-        if (acc == null) return "redirect:/login";
+        if (acc == null)
+            return "redirect:/login";
 
         if (acc.getRole().contains("ADMIN")) {
             return "redirect:/admin/home";
         }
 
-        KhachHang kh = khRepo.findByAccount(acc);  // ĐÚNG CHUẨN
+        if (acc.getRole().contains("STAFF")) {
+            return "redirect:/staff/home";
+        }
+
+        KhachHang kh = khRepo.findByAccount(acc); // ĐÚNG CHUẨN
         model.addAttribute("kh", kh);
 
         if (kh == null) {
@@ -68,7 +76,8 @@ public class UserController {
     public String userProfile(HttpSession session, Model model) {
 
         Account acc = (Account) session.getAttribute("user");
-        if (acc == null) return "redirect:/login";
+        if (acc == null)
+            return "redirect:/login";
 
         if (acc.getRole().contains("ADMIN")) {
             model.addAttribute("errorMsg", "Admin không có hồ sơ cá nhân.");
@@ -89,11 +98,11 @@ public class UserController {
             @RequestParam(required = false) String gioiTinh,
             @RequestParam(required = false) String ngaySinh,
             HttpSession session,
-            Model model
-    ) {
+            Model model) {
 
         Account acc = (Account) session.getAttribute("user");
-        if (acc == null) return "redirect:/login";
+        if (acc == null)
+            return "redirect:/login";
 
         KhachHang kh = khRepo.findByAccount(acc);
         if (kh == null) {
@@ -130,13 +139,16 @@ public class UserController {
     public boolean checkPhone(@RequestParam String sdt, HttpSession session) {
 
         Account acc = (Account) session.getAttribute("user");
-        if (acc == null) return false;
+        if (acc == null)
+            return false;
 
         KhachHang kh = khRepo.findByAccount(acc);
-        if (kh == null) return false;
+        if (kh == null)
+            return false;
 
         KhachHang check = khRepo.findBySdt(sdt);
-        if (check == null) return false;
+        if (check == null)
+            return false;
 
         return !check.getMakh().equals(kh.getMakh());
     }

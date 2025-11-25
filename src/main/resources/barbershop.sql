@@ -228,10 +228,16 @@ CREATE TABLE `nhan_vien` (
   `sdt` varchar(20) DEFAULT NULL,
   `chuc_vu` varchar(50) DEFAULT NULL,
   `ho_ten` varchar(100) DEFAULT NULL,
+
+  `account_id` int DEFAULT NULL,
+
   PRIMARY KEY (`manv`),
+  UNIQUE KEY `UK_nhanvien_account` (`account_id`),
   KEY `FKfa850k7guf8q6rfs8l6ky1plt` (`ma_ca`),
-  CONSTRAINT `FKfa850k7guf8q6rfs8l6ky1plt` FOREIGN KEY (`ma_ca`) REFERENCES `ca_lam` (`ma_ca`)
+  CONSTRAINT `FKfa850k7guf8q6rfs8l6ky1plt` FOREIGN KEY (`ma_ca`) REFERENCES `ca_lam` (`ma_ca`),
+  CONSTRAINT `FK_nhanvien_account` FOREIGN KEY (`account_id`) REFERENCES `account` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

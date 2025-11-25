@@ -10,7 +10,7 @@ public class NhanVien {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "manv")
-    private Integer manv;  // SỬA LẠI ĐÚNG TÊN CỘT TRONG DATABASE
+    private Integer manv; // SỬA LẠI ĐÚNG TÊN CỘT TRONG DATABASE
 
     @Column(name = "ho_ten", length = 100)
     private String hoTen;
@@ -33,11 +33,16 @@ public class NhanVien {
     @Column(name = "luong_co_ban")
     private Double luongCoBan;
 
+    @OneToOne
+    @JoinColumn(name = "account_id", unique = true)
+    private Account account;
+
     @ManyToOne
     @JoinColumn(name = "ma_ca")
     private CaLam caLam;
 
-    public NhanVien() {}
+    public NhanVien() {
+    }
 
     // ======== GETTER – SETTER ========
 
@@ -120,4 +125,13 @@ public class NhanVien {
     public void setCaLam(CaLam caLam) {
         this.caLam = caLam;
     }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
 }

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bảng làm việc Nhân viên</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            margin-bottom: 4px;
+        }
+
+        .sub {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .top-bar a {
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 20px;
+            background: #e0e7ff;
+            color: #1e3a8a;
+            font-size: 14px;
+            margin-left: 6px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 16px 18px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .card-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+            margin-bottom: 24px;
+        }
+
+        th,
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+
+        th {
+            background: #1d4ed8;
+            color: white;
+            text-align: left;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty {
+            padding: 16px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .alert {
+            padding: 10px 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <div class="top-bar">
+            <div>
+                <h2>Xin chào,
+                    <span th:text="${nv != null ? nv.hoTen : 'Nhân viên'}"></span> 👋
+                </h2>
+                <div class="sub">
+                    Hôm nay:
+                    <span th:text="${#temporals.format(today, 'dd/MM/yyyy')}"></span>
+                    <span th:if="${nv != null && nv.caLam != null}">
+                        • Ca làm:
+                        <b th:text="${#temporals.format(nv.caLam.gioBatDau,'HH:mm')
+                                 + ' - ' +
+                                 #temporals.format(nv.caLam.gioKetThuc,'HH:mm')}"></b>
+                    </span>
+                    <span th:if="${nv != null && nv.caLam == null}">
+                        • Bạn chưa chọn ca làm.
+                        <a href="/staff/ca-lam">Chọn ca làm</a>
+                    </span>
+                </div>
+            </div>
+
+            <div>
+                <a href="/staff/ca-lam">Quản lý ca làm</a>
+                <a href="/user/home">Trang khách hàng</a>
+                <a href="/logout" style="background:#fee2e2;color:#b91c1c;">Đăng xuất</a>
+            </div>
+        </div>
+
+        <div th:if="${errorMsg}" class="alert alert-error" th:text="${errorMsg}"></div>
+
+        <div class="cards">
+            <div class="card">
+                <div class="card-title">Số khách hàng của bạn</div>
+                <div class="card-value" th:text="${#lists.size(listKhachHang)}">0</div>
+                <div class="card-desc">Tính theo những khách đã từng đặt lịch với bạn.</div>
+            </div>
+        </div>
+
+        <h3>Danh sách khách hàng của bạn</h3>
+
+        <table th:if="${!#lists.isEmpty(listKhachHang)}">
+            <thead>
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Số điện thoại</th>
+                    <th>Giới tính</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="kh : ${listKhachHang}">
+                    <td th:text="${kh.hoTen}"></td>
+                    <td th:text="${kh.sdt}"></td>
+                    <td th:text="${kh.gioiTinh}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="empty" th:if="${#lists.isEmpty(listKhachHang)}">
+            Chưa có khách hàng nào được ghi nhận cho bạn.
+        </div>
+
+    </div>
+</body>
+
+</html>
