@@ -9,6 +9,7 @@ import com.barbershop.repository.LichHenDichVuRepository;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,24 +32,48 @@ public class HoaDonController {
     @Autowired
     private LichHenDichVuRepository lichHenDichVuRepo;
 
-    // ==================== LIST ====================
+    // ==================== LIST + BỘ LỌC ====================
     @GetMapping
-    public String list(Model model, HttpSession session) {
+    public String list(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(name = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam(name = "method", required = false) String method,
+            Model model,
+            HttpSession session) {
+
         if (session.getAttribute("user") == null)
             return "redirect:/login";
 
-        List<HoaDon> list = hoaDonRepo.findAll();
+        // Chuẩn hóa giá trị rỗng => null để query gọn
+        if (keyword != null && keyword.trim().isEmpty()) {
+            keyword = null;
+        }
+        if (method != null && method.trim().isEmpty()) {
+            method = null;
+        }
+
+        // Lấy danh sách hóa đơn theo bộ lọc
+        List<HoaDon> list = hoaDonRepo.search(keyword, fromDate, toDate, method);
 
         // Map: maHd -> danh sách dịch vụ
         Map<Integer, List<LichHenDichVu>> mapDv = new HashMap<>();
         for (HoaDon hd : list) {
-            mapDv.put(
-                    hd.getMaHd(),
-                    lichHenDichVuRepo.findByLichHen_MaLh(hd.getLichHen().getMaLh()));
+            if (hd.getLichHen() != null && hd.getLichHen().getMaLh() != null) {
+                mapDv.put(
+                        hd.getMaHd(),
+                        lichHenDichVuRepo.findByLichHen_MaLh(hd.getLichHen().getMaLh()));
+            }
         }
 
         model.addAttribute("listHoaDon", list);
         model.addAttribute("mapDichVu", mapDv);
+
+        // Đẩy lại giá trị filter để hiển thị lại trên form
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("fromDate", fromDate);
+        model.addAttribute("toDate", toDate);
+        model.addAttribute("method", method);
 
         return "hoadon-list";
     }

@@ -1,77 +1,198 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>Danh sách khách hàng</title>
 
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        table, th, td { border: 1px solid #ddd; }
-        th { background: #1976d2; color: white; padding: 10px; }
-        td { padding: 10px; }
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-        a.button, button {
-            padding: 8px 12px;
-            background: #1976d2;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            border: none;
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background-color: #f4f6fb;
+            padding: 24px;
         }
 
-        .btn-delete { background: red !important; }
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .btn-pill {
+            border-radius: 999px;
+        }
+
+        .search-input .form-control {
+            border-left: 0;
+        }
+
+        .search-input .input-group-text {
+            background-color: #fff;
+            border-right: 0;
+        }
+
+        .table thead th {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            font-size: 14px;
+        }
+
+        .badge-role {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            font-weight: 500;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+        }
     </style>
 </head>
+
 <body>
 
-<h2>Danh sách khách hàng</h2>
+    <div class="container-fluid">
 
-<!-- Form tìm kiếm -->
-<form method="get" action="/admin/khachhang" style="margin-bottom: 15px;">
-    <input type="text" name="keyword"
-           th:value="${keyword}"
-           placeholder="Tìm theo tên hoặc số điện thoại"
-           style="padding: 8px; width: 260px; border-radius: 5px; border: 1px solid #ccc;">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+                <h3 class="page-title mb-1">
+                    <i class="bi bi-people-fill me-2 text-primary"></i>Danh sách khách hàng
+                </h3>
+                <p class="page-subtitle mb-0">
+                    Quản lý thông tin khách hàng & lịch hẹn.
+                </p>
+            </div>
 
-    <button type="submit">Tìm kiếm</button>
-    <a href="/admin/khachhang" class="button" style="background:#777;">Xóa lọc</a>
-</form>
+            <a href="/admin/home" class="btn btn-outline-secondary btn-pill">
+                <i class="bi bi-arrow-left me-1"></i> Quay lại Dashboard
+            </a>
+        </div>
 
-<a href="/admin/khachhang/add" class="button">+ Thêm khách hàng</a>
+        <!-- Card -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
 
-<table>
-    <tr>
-        <th>ID</th>
-        <th>Họ tên</th>
-        <th>Giới tính</th>
-        <th>Ngày sinh</th>
-        <th>SĐT</th>
-        <th>Thao tác</th>
-    </tr>
+                <!-- Thanh tìm kiếm + nút thêm -->
+                <form method="get" action="/admin/khachhang" class="row g-2 align-items-center mb-3">
 
-    <tr th:each="kh : ${listKhachHang}">
-        <td th:text="${kh.makh}"></td>
-        <td th:text="${kh.hoTen}"></td>
-        <td th:text="${kh.gioiTinh}"></td>
+                    <!-- Ô tìm kiếm -->
+                    <div class="col-md-5 col-lg-4">
+                        <div class="input-group search-input">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" name="keyword" th:value="${keyword}" class="form-control"
+                                placeholder="Tìm theo tên hoặc số điện thoại">
+                        </div>
+                    </div>
 
-        <!-- Format ngày sinh -->
-        <td th:text="${kh.ngaySinh != null ? #temporals.format(kh.ngaySinh, 'dd/MM/yyyy') : '---'}"></td>
+                    <!-- Nút Tìm kiếm -->
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary btn-pill px-4">
+                            Tìm kiếm
+                        </button>
+                    </div>
 
-        <td th:text="${kh.sdt}"></td>
+                    <!-- Nút Xóa lọc -->
+                    <div class="col-auto">
+                        <a href="/admin/khachhang" class="btn btn-outline-secondary btn-pill">
+                            Xóa lọc
+                        </a>
+                    </div>
 
-        <td>
-            <a class="button" th:href="@{'/admin/khachhang/edit/' + ${kh.makh}}">Sửa</a>
+                    <!-- Nút Thêm khách hàng -->
+                    <div class="col-auto ms-auto">
+                        <a href="/admin/khachhang/add" class="btn btn-success btn-pill">
+                            <i class="bi bi-plus-lg me-1"></i> Thêm khách hàng
+                        </a>
+                    </div>
+                </form>
 
-            <a class="button btn-delete"
-               th:href="@{'/admin/khachhang/delete/' + ${kh.makh}}"
-               onclick="return confirm('Bạn chắc chắn muốn xóa?')">Xóa</a>
-        </td>
-    </tr>
-</table>
+                <!-- Bảng dữ liệu -->
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center">Mã KH</th>
+                                <th>Họ tên</th>
+                                <th>Liên hệ</th>
+                                <th class="text-center">Giới tính</th>
+                                <th class="text-center">Ngày sinh</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
 
-<br>
-<a href="/admin/home" class="button">← Quay lại Dashboard</a>
+                        <tbody>
+                            <tr th:each="kh : ${listKhachHang}">
+                                <!-- Mã KH -->
+                                <td class="text-center" th:text="${kh.makh}"></td>
 
+                                <!-- Họ tên -->
+                                <td>
+                                    <div class="fw-semibold mb-0" th:text="${kh.hoTen}"></div>
+                                </td>
+
+                                <!-- Liên hệ (icon + SĐT) -->
+                                <td>
+                                    <span class="text-nowrap">
+                                        <i class="bi bi-telephone-outbound me-1 text-success"></i>
+                                        <span th:text="${kh.sdt}"></span>
+                                    </span>
+                                </td>
+
+                                <!-- Giới tính -->
+                                <td class="text-center" th:text="${kh.gioiTinh}"></td>
+
+                                <!-- Ngày sinh -->
+                                <td class="text-center"
+                                    th:text="${kh.ngaySinh != null ? #temporals.format(kh.ngaySinh, 'dd/MM/yyyy') : '---'}">
+                                </td>
+
+                                <!-- Thao tác -->
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a class="btn btn-outline-primary btn-sm"
+                                            th:href="@{'/admin/khachhang/edit/' + ${kh.makh}}">
+                                            <i class="bi bi-pencil-square me-1"></i> Sửa
+                                        </a>
+
+                                        <a class="btn btn-outline-danger btn-sm"
+                                            th:href="@{'/admin/khachhang/delete/' + ${kh.makh}}"
+                                            onclick="return confirm('Bạn chắc chắn muốn xóa khách hàng này?');">
+                                            <i class="bi bi-trash3 me-1"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Khi không có dữ liệu -->
+                            <tr th:if="${#lists.isEmpty(listKhachHang)}">
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    Không có khách hàng nào phù hợp.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

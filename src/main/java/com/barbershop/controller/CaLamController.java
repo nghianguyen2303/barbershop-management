@@ -2,6 +2,9 @@ package com.barbershop.controller;
 
 import com.barbershop.entity.CaLam;
 import com.barbershop.repository.CaLamRepository;
+
+import com.barbershop.temp.ShiftChangeRequestStore;
+
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,18 +23,35 @@ public class CaLamController {
     // ===================== DANH SÁCH CA =====================
     @GetMapping
     public String list(Model model, HttpSession session) {
-        if (session.getAttribute("user") == null) return "redirect:/login";
+        if (session.getAttribute("user") == null)
+            return "redirect:/login";
 
         List<CaLam> list = caLamRepo.findAll();
         model.addAttribute("listCaLam", list);
 
+        // Đẩy danh sách yêu cầu đổi ca (lưu tạm trong RAM) cho view
+        model.addAttribute("shiftRequests", ShiftChangeRequestStore.getAll());
+
         return "calam-list";
+    }
+
+    // ============ ADMIN ĐÁNH DẤU ĐÃ XỬ LÝ YÊU CẦU ĐỔI CA ============
+    @GetMapping("/request/delete/{id}")
+    public String deleteShiftRequest(@PathVariable("id") int id,
+            HttpSession session) {
+        if (session.getAttribute("user") == null)
+            return "redirect:/login";
+
+        ShiftChangeRequestStore.removeById(id);
+
+        return "redirect:/admin/calam";
     }
 
     // ===================== FORM THÊM =====================
     @GetMapping("/add")
     public String addForm(Model model, HttpSession session) {
-        if (session.getAttribute("user") == null) return "redirect:/login";
+        if (session.getAttribute("user") == null)
+            return "redirect:/login";
 
         model.addAttribute("caLam", new CaLam());
         model.addAttribute("errorMessage", null);
@@ -56,7 +76,8 @@ public class CaLamController {
     // ===================== FORM SỬA =====================
     @GetMapping("/edit/{maCa}")
     public String editForm(@PathVariable("maCa") Integer maCa, Model model, HttpSession session) {
-        if (session.getAttribute("user") == null) return "redirect:/login";
+        if (session.getAttribute("user") == null)
+            return "redirect:/login";
 
         CaLam caLam = caLamRepo.findById(maCa).orElse(null);
 

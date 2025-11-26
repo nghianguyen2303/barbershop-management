@@ -17,14 +17,29 @@ public class DichVuController {
     @Autowired
     private DichVuRepository dichVuRepo;
 
-    // ===================== DANH SÁCH =====================
+    // ===================== DANH SÁCH + BỘ LỌC =====================
     @GetMapping
-    public String list(Model model, HttpSession session) {
+    public String list(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "minPrice", required = false) Double minPrice,
+            @RequestParam(name = "maxPrice", required = false) Double maxPrice,
+            Model model,
+            HttpSession session) {
+
         if (session.getAttribute("user") == null)
             return "redirect:/login";
 
-        List<DichVu> list = dichVuRepo.findAll();
+        // Chuẩn hóa keyword rỗng => null để query gọn
+        if (keyword != null && keyword.trim().isEmpty()) {
+            keyword = null;
+        }
+
+        List<DichVu> list = dichVuRepo.search(keyword, minPrice, maxPrice);
+
         model.addAttribute("listDichVu", list);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("minPrice", minPrice);
+        model.addAttribute("maxPrice", maxPrice);
 
         return "dichvu-list";
     }
@@ -49,8 +64,8 @@ public class DichVuController {
     // ===================== FORM SỬA =====================
     @GetMapping("/edit/{maDv}")
     public String editForm(@PathVariable("maDv") int maDv,
-                           Model model,
-                           HttpSession session) {
+            Model model,
+            HttpSession session) {
 
         if (session.getAttribute("user") == null)
             return "redirect:/login";

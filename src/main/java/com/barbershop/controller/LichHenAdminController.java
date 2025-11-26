@@ -7,10 +7,12 @@ import com.barbershop.repository.LichHenDichVuRepository;
 
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Controller
@@ -23,10 +25,14 @@ public class LichHenAdminController {
     @Autowired
     private LichHenDichVuRepository lhDvRepo;
 
-
-    // ========================= LIST =========================
+    // ========================= LIST + BỘ LỌC =========================
     @GetMapping
-    public String list(Model model, HttpSession session) {
+    public String list(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "fromDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam(name = "toDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            Model model,
+            HttpSession session) {
 
         if (session.getAttribute("user") == null)
             return "redirect:/login";
@@ -44,20 +50,32 @@ public class LichHenAdminController {
             session.removeAttribute("errorMsg");
         }
 
-        List<LichHen> list = lichHenRepo.findAllOrderByNgayDescGioAsc();
+        // Chuẩn hóa keyword rỗng => null để query gọn
+        if (keyword != null && keyword.trim().isEmpty()) {
+            keyword = null;
+        }
 
+        // Lấy danh sách theo bộ lọc
+        List<LichHen> list = lichHenRepo.searchForAdmin(keyword, fromDate, toDate);
+
+        // Map: maLh -> danh sách dịch vụ
         Map<Integer, List<LichHenDichVu>> mapDv = new HashMap<>();
         for (LichHen lh : list) {
-            mapDv.put(lh.getMaLh(),
+            mapDv.put(
+                    lh.getMaLh(),
                     lhDvRepo.findByLichHen_MaLh(lh.getMaLh()));
         }
 
         model.addAttribute("listLichHen", list);
         model.addAttribute("mapDichVu", mapDv);
 
+        // Đẩy lại filter để hiển thị lại trên form
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("fromDate", fromDate);
+        model.addAttribute("toDate", toDate);
+
         return "lichhen-admin-list";
     }
-
 
     // ========================= DELETE =========================
     @GetMapping("/delete/{id}")

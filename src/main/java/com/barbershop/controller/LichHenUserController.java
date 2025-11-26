@@ -62,31 +62,19 @@ public class LichHenUserController {
                 .sum();
     }
 
-    // ========================= LIST =========================
+    // ========================= LIST (CHỈ REDIRECT VỀ HOME)
+    // =========================
     @GetMapping
-    public String list(Model model, HttpSession session) {
+    public String list(HttpSession session) {
 
         Account acc = (Account) session.getAttribute("user");
-        if (acc == null)
+        if (acc == null) {
             return "redirect:/login";
-
-        KhachHang kh = getKhachHang(acc);
-
-        model.addAttribute("errorMsg", session.getAttribute("errorMsg"));
-        model.addAttribute("successMsg", session.getAttribute("successMsg"));
-        session.removeAttribute("errorMsg");
-        session.removeAttribute("successMsg");
-
-        List<LichHen> list = lichHenRepo.findByKhachHangOrderByNgayDescGioAsc(kh.getMakh());
-        model.addAttribute("listLichHen", list);
-
-        Map<Integer, List<LichHenDichVu>> mapDv = new HashMap<>();
-        for (LichHen lh : list) {
-            mapDv.put(lh.getMaLh(), lhDvRepo.findByLichHen_MaLh(lh.getMaLh()));
         }
-        model.addAttribute("mapDichVu", mapDv);
 
-        return "lichhen-user-list";
+        // Danh sách lịch hẹn đã được hiển thị ở trang user-home,
+        // nên /user/lichhen chỉ dùng để điều hướng về đó
+        return "redirect:/user/home";
     }
 
     // ========================= ADD FORM =========================
@@ -213,7 +201,7 @@ public class LichHenUserController {
         }
 
         session.setAttribute("successMsg", "✔ Đặt lịch thành công!");
-        return "redirect:/user/lichhen";
+        return "redirect:/user/home"; // CHỈNH Ở ĐÂY
     }
 
     // ========================= EDIT FORM =========================
@@ -226,7 +214,8 @@ public class LichHenUserController {
 
         LichHen lh = lichHenRepo.findById(id).orElse(null);
         if (lh == null || lh.getKhachHang().getAccount().getId() != acc.getId()) {
-            return "redirect:/user/lichhen";
+            // nếu không tồn tại hoặc không thuộc KH hiện tại → về Home
+            return "redirect:/user/home"; // CHỈNH Ở ĐÂY
         }
 
         List<Integer> selected = lhDvRepo.findByLichHen_MaLh(id)
@@ -257,7 +246,7 @@ public class LichHenUserController {
 
         LichHen lh = lichHenRepo.findById(maLh).orElse(null);
         if (lh == null)
-            return "redirect:/user/lichhen";
+            return "redirect:/user/home"; // CHỈNH Ở ĐÂY
 
         lh.setNgayHen(ngayHen);
         lh.setGioHen(gioHen);
@@ -276,7 +265,7 @@ public class LichHenUserController {
         }
 
         session.setAttribute("successMsg", "✔ Cập nhật thành công!");
-        return "redirect:/user/lichhen";
+        return "redirect:/user/home"; // CHỈNH Ở ĐÂY
     }
 
     // ========================= DELETE =========================
@@ -291,12 +280,12 @@ public class LichHenUserController {
         LichHen lh = lichHenRepo.findById(id).orElse(null);
 
         if (lh == null || lh.getKhachHang().getAccount().getId() != acc.getId())
-            return "redirect:/user/lichhen";
+            return "redirect:/user/home"; // CHỈNH Ở ĐÂY
 
         lhDvRepo.deleteByLichHen_MaLh(id);
         lichHenRepo.deleteById(id);
 
         session.setAttribute("successMsg", "✔ Đã xóa lịch hẹn!");
-        return "redirect:/user/lichhen";
+        return "redirect:/user/home"; // CHỈNH Ở ĐÂY
     }
 }

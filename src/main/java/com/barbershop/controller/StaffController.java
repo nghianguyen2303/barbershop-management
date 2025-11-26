@@ -3,6 +3,9 @@ package com.barbershop.controller;
 import com.barbershop.entity.*;
 import com.barbershop.repository.*;
 
+import com.barbershop.temp.ShiftChangeRequest;
+import com.barbershop.temp.ShiftChangeRequestStore;
+
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -23,11 +26,9 @@ public class StaffController {
     private LichHenRepository lichHenRepo;
 
     @Autowired
-    private CaLamRepository caLamRepo;
+    private LichHenDichVuRepository lhDvRepo;
 
     // =================== UTIL ===================
-
-    // Lấy nhân viên từ account lưu trong session
     private NhanVien getNhanVienFromSession(HttpSession session) {
         Account acc = (Account) session.getAttribute("user");
         if (acc == null)
@@ -35,139 +36,139 @@ public class StaffController {
         return nvRepo.findByAccount(acc);
     }
 
-    // Nếu không phải nhân viên thì đá ra login
     private String checkStaffRole(HttpSession session) {
         Account acc = (Account) session.getAttribute("user");
-        if (acc == null) {
+        if (acc == null || acc.getRole() == null)
             return "redirect:/login";
-        }
-        // Nếu bạn có field role trong Account thì có thể check:
-        // if (!"STAFF".equalsIgnoreCase(acc.getRole())) return "redirect:/login";
-        return null; // ok
+
+        if (!acc.getRole().equalsIgnoreCase("STAFF"))
+            return "redirect:/login";
+
+        return null;
     }
 
-    // =================== TRANG HOME NHÂN VIÊN ===================
-    // =================== TRANG HOME NHÂN VIÊN ===================
-
+    // =================== STAFF HOME ===================
     @GetMapping("/home")
     public String homeStaff(Model model, HttpSession session) {
 
-        // 1. Check quyền đăng nhập
         String redirect = checkStaffRole(session);
-        if (redirect != null) {
+        if (redirect != null)
             return redirect;
-        }
 
-        // 2. Lấy nhân viên từ session
-        NhanVien nv = getNhanVienFromSession(session);
         LocalDate today = LocalDate.now();
 
+        // lấy thông báo
+        Object success = session.getAttribute("successMsg");
+        Object error = session.getAttribute("errorMsg");
+        if (success != null) {
+            model.addAttribute("successMsg", success);
+            session.removeAttribute("successMsg");
+        }
+        if (error != null) {
+            model.addAttribute("errorMsg", error);
+            session.removeAttribute("errorMsg");
+        }
+
+        NhanVien nv = getNhanVienFromSession(session);
         if (nv == null) {
-            // Không gắn nhân viên -> vẫn trả về view nhưng không làm gì thêm
-            model.addAttribute("today", today);
-            model.addAttribute("errorMsg",
-                    "Tài khoản này chưa được gắn với nhân viên trong hệ thống.");
-            model.addAttribute("listKhachHang", Collections.emptyList());
+            model.addAttribute("errorMsg", "Tài khoản này chưa được liên kết với nhân viên.");
             return "staff-home";
         }
 
-        // 3. Lấy tất cả lịch hẹn của nhân viên này
+        // toàn bộ lịch của nv
         List<LichHen> all = lichHenRepo.findByNhanVien_Manv(nv.getManv());
-        if (all == null) {
-            all = Collections.emptyList();
-        }
 
-        // 4. Lọc ra danh sách khách hàng (duy nhất) đã từng hẹn với nhân viên
-        Map<Integer, KhachHang> uniqueKhMap = new LinkedHashMap<>();
+        // lịch hôm nay
+        List<LichHen> todayAppointments = new ArrayList<>();
         for (LichHen lh : all) {
-            if (lh == null)
-                continue;
-            KhachHang kh = lh.getKhachHang();
-            if (kh == null || kh.getMakh() == null)
-                continue;
-
-            // dùng makh làm key để không trùng khách
-            if (!uniqueKhMap.containsKey(kh.getMakh())) {
-                uniqueKhMap.put(kh.getMakh(), kh);
-            }
+            if (lh.getNgayHen() != null && lh.getNgayHen().equals(today))
+                todayAppointments.add(lh);
         }
 
-        List<KhachHang> listKhachHang = new ArrayList<>(uniqueKhMap.values());
+        todayAppointments.sort(
+                Comparator.comparing(LichHen::getGioHen, Comparator.nullsLast(Comparator.naturalOrder())));
 
-        // 5. Đẩy dữ liệu ra view
+        // map dịch vụ
+        Map<Integer, List<LichHenDichVu>> mapDv = new HashMap<>();
+        for (LichHen lh : todayAppointments) {
+            if (lh.getMaLh() != null)
+                mapDv.put(lh.getMaLh(), lhDvRepo.findByLichHen_MaLh(lh.getMaLh()));
+        }
+
+        // khách hàng của nv
+        Map<Integer, KhachHang> mapKh = new LinkedHashMap<>();
+        for (LichHen lh : all) {
+            if (lh.getKhachHang() != null)
+                mapKh.put(lh.getKhachHang().getMakh(), lh.getKhachHang());
+        }
+
+        // thống kê
+        long totalToday = todayAppointments.size();
+        long totalAll = all.size();
+
         model.addAttribute("nv", nv);
         model.addAttribute("today", today);
-        model.addAttribute("listKhachHang", listKhachHang);
+        model.addAttribute("listKhachHang", new ArrayList<>(mapKh.values()));
+        model.addAttribute("listLichHenToday", todayAppointments);
+        model.addAttribute("mapDichVu", mapDv);
+        model.addAttribute("totalToday", totalToday);
+        model.addAttribute("totalAll", totalAll);
 
         return "staff-home";
     }
 
-    // =================== CHỌN CA LÀM ===================
-
-    // Trang chọn ca làm cho NV
-    @GetMapping("/ca-lam")
-    public String chonCaLamPage(Model model, HttpSession session) {
+    // =================== YÊU CẦU ĐỔI CA ===================
+    @GetMapping("/shift-request")
+    public String shiftRequestForm(
+            @RequestParam(name = "currentShift", required = false) String currentShift,
+            Model model,
+            HttpSession session) {
 
         String redirect = checkStaffRole(session);
-        if (redirect != null) {
+        if (redirect != null)
             return redirect;
-        }
 
         NhanVien nv = getNhanVienFromSession(session);
         if (nv == null) {
-            model.addAttribute("errorMsg",
-                    "Tài khoản này chưa được gắn với nhân viên trong hệ thống.");
-            return "staff-ca-lam";
+            model.addAttribute("errorMsg", "Tài khoản này chưa gắn với nhân viên.");
+            return "staff-shift-request";
         }
 
-        List<CaLam> dsCa = caLamRepo.findAll();
-        if (dsCa == null)
-            dsCa = Collections.emptyList();
+        model.addAttribute("today", LocalDate.now());
+        model.addAttribute("currentShift", currentShift != null ? currentShift : "");
+        model.addAttribute("staffName", nv.getHoTen());
 
-        model.addAttribute("nv", nv);
-        model.addAttribute("dsCa", dsCa);
-
-        return "staff-ca-lam";
+        return "staff-shift-request";
     }
 
-    // Nhân viên chọn một ca làm cụ thể
-    @PostMapping("/ca-lam/chon")
-    public String chonCaLam(@RequestParam("maCa") Integer maCa,
-            HttpSession session,
-            Model model) {
+    @PostMapping("/shift-request")
+    public String submitShiftRequest(
+            @RequestParam("date") LocalDate date,
+            @RequestParam("currentShift") String currentShift,
+            @RequestParam("desiredShift") String desiredShift,
+            @RequestParam("reason") String reason,
+            HttpSession session) {
 
         String redirect = checkStaffRole(session);
-        if (redirect != null) {
+        if (redirect != null)
             return redirect;
-        }
 
         NhanVien nv = getNhanVienFromSession(session);
         if (nv == null) {
-            model.addAttribute("errorMsg",
-                    "Tài khoản này chưa được gắn với nhân viên trong hệ thống.");
-            return "staff-ca-lam";
+            session.setAttribute("errorMsg", "Tài khoản nhân viên không tồn tại.");
+            return "redirect:/staff/home";
         }
 
-        if (maCa == null) {
-            model.addAttribute("errorMsg", "Vui lòng chọn ca làm hợp lệ.");
-            List<CaLam> dsCa = caLamRepo.findAll();
-            model.addAttribute("nv", nv);
-            model.addAttribute("dsCa", dsCa);
-            return "staff-ca-lam";
-        }
+        ShiftChangeRequest req = new ShiftChangeRequest(
+                nv.getHoTen(),
+                date,
+                currentShift.trim(),
+                desiredShift.trim(),
+                reason.trim());
 
-        CaLam ca = caLamRepo.findById(maCa).orElse(null);
-        if (ca == null) {
-            model.addAttribute("errorMsg", "Ca làm không tồn tại.");
-            List<CaLam> dsCa = caLamRepo.findAll();
-            model.addAttribute("nv", nv);
-            model.addAttribute("dsCa", dsCa);
-            return "staff-ca-lam";
-        }
+        ShiftChangeRequestStore.add(req);
 
-        nv.setCaLam(ca);
-        nvRepo.save(nv);
-
-        return "redirect:/staff/ca-lam";
+        session.setAttribute("successMsg", "✔ Đã gửi yêu cầu đổi ca cho Admin.");
+        return "redirect:/staff/home";
     }
 }

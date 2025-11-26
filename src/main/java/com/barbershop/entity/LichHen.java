@@ -33,21 +33,51 @@ public class LichHen {
     private List<LichHenDichVu> dichVus;
 
     // getters / setters
-    public Integer getMaLh() { return maLh; }
-    public void setMaLh(Integer maLh) { this.maLh = maLh; }
+    public Integer getMaLh() {
+        return maLh;
+    }
 
-    public LocalDate getNgayHen() { return ngayHen; }
-    public void setNgayHen(LocalDate ngayHen) { this.ngayHen = ngayHen; }
+    public void setMaLh(Integer maLh) {
+        this.maLh = maLh;
+    }
 
-    public LocalTime getGioHen() { return gioHen; }
-    public void setGioHen(LocalTime gioHen) { this.gioHen = gioHen; }
+    public LocalDate getNgayHen() {
+        return ngayHen;
+    }
 
-    public KhachHang getKhachHang() { return khachHang; }
-    public void setKhachHang(KhachHang khachHang) { this.khachHang = khachHang; }
+    public void setNgayHen(LocalDate ngayHen) {
+        this.ngayHen = ngayHen;
+    }
 
-    public NhanVien getNhanVien() { return nhanVien; }
-    public void setNhanVien(NhanVien nhanVien) { this.nhanVien = nhanVien; }
+    public LocalTime getGioHen() {
+        return gioHen;
+    }
 
-    public List<LichHenDichVu> getDichVus() { return dichVus; }
-    public void setDichVus(List<LichHenDichVu> dichVus) { this.dichVus = dichVus; }
+    public void setGioHen(LocalTime gioHen) {
+        this.gioHen = gioHen;
+    }
+
+    public KhachHang getKhachHang() {
+        return khachHang;
+    }
+
+    public void setKhachHang(KhachHang khachHang) {
+        this.khachHang = khachHang;
+    }
+
+    public NhanVien getNhanVien() {
+        return nhanVien;
+    }
+
+    public void setNhanVien(NhanVien nhanVien) {
+        this.nhanVien = nhanVien;
+    }
+
+    public List<LichHenDichVu> getDichVus() {
+        return dichVus;
+    }
+
+    public void setDichVus(List<LichHenDichVu> dichVus) {
+        this.dichVus = dichVus;
+    }
 }

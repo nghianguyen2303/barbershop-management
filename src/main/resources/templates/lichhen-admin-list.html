@@ -79,6 +79,45 @@
 
             <div class="card shadow-sm border-0">
                 <div class="card-body">
+
+                    <!-- FORM BỘ LỌC -->
+                    <form method="get" action="/admin/lichhen" class="row g-2 align-items-end mb-3">
+
+                        <!-- Từ khóa: KH / SĐT / Nhân viên -->
+                        <div class="col-md-5">
+                            <label class="form-label small text-muted">Tìm theo khách hàng / SĐT / nhân viên</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </span>
+                                <input type="text" name="keyword" class="form-control" th:value="${keyword}"
+                                    placeholder="Nhập tên KH, số điện thoại hoặc tên nhân viên">
+                            </div>
+                        </div>
+
+                        <!-- Từ ngày -->
+                        <div class="col-md-3 col-lg-2">
+                            <label class="form-label small text-muted">Từ ngày</label>
+                            <input type="date" name="fromDate" class="form-control" th:value="${fromDate}">
+                        </div>
+
+                        <!-- Đến ngày -->
+                        <div class="col-md-3 col-lg-2">
+                            <label class="form-label small text-muted">Đến ngày</label>
+                            <input type="date" name="toDate" class="form-control" th:value="${toDate}">
+                        </div>
+
+                        <!-- Nút -->
+                        <div class="col-md-4 col-lg-3 text-md-end mt-2 mt-md-0">
+                            <button type="submit" class="btn btn-primary me-1">
+                                <i class="fa-solid fa-filter me-1"></i>Lọc
+                            </button>
+                            <a href="/admin/lichhen" class="btn btn-outline-secondary">
+                                <i class="fa-solid fa-xmark me-1"></i>Xóa lọc
+                            </a>
+                        </div>
+                    </form>
+
                     <div class="table-responsive">
                         <table class="table align-middle mb-0">
                             <thead>
@@ -130,7 +169,7 @@
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(listLichHen)}">
                                     <td colspan="6" class="text-center text-muted py-4">
-                                        Hiện chưa có lịch hẹn nào.
+                                        Hiện không có lịch hẹn nào phù hợp bộ lọc.
                                     </td>
                                 </tr>
                             </tbody>
