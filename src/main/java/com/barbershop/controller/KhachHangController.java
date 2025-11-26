@@ -20,8 +20,8 @@ public class KhachHangController {
     // ===================== DANH SÁCH + TÌM KIẾM =====================
     @GetMapping
     public String list(Model model,
-                       @RequestParam(value = "keyword", required = false) String keyword,
-                       HttpSession session) {
+            @RequestParam(value = "keyword", required = false) String keyword,
+            HttpSession session) {
 
         if (session.getAttribute("user") == null)
             return "redirect:/login";
@@ -43,7 +43,6 @@ public class KhachHangController {
     // ===================== FORM THÊM =====================
     @GetMapping("/add")
     public String addForm(Model model, HttpSession session) {
-
         if (session.getAttribute("user") == null)
             return "redirect:/login";
 
@@ -71,10 +70,26 @@ public class KhachHangController {
         return "khachhang-edit";
     }
 
-    // ===================== XỬ LÝ SỬA =====================
+    // ===================== XỬ LÝ SỬA (ĐÃ FIX MẤT ACCOUNT) =====================
     @PostMapping("/edit")
-    public String edit(@ModelAttribute KhachHang kh) {
-        khachHangRepo.save(kh);
+    public String edit(@ModelAttribute KhachHang khForm) {
+
+        // 1. Lấy bản gốc từ database
+        KhachHang khDb = khachHangRepo.findById(khForm.getMakh()).orElse(null);
+        if (khDb == null)
+            return "redirect:/admin/khachhang";
+
+        // 2. Cập nhật các trường được phép sửa
+        khDb.setHoTen(khForm.getHoTen());
+        khDb.setGioiTinh(khForm.getGioiTinh());
+        khDb.setNgaySinh(khForm.getNgaySinh());
+        khDb.setSdt(khForm.getSdt());
+
+        // 🟢 3. KHÔNG ghi đè account => giữ nguyên account_id
+        // (Không làm gì cả)
+
+        khachHangRepo.save(khDb);
+
         return "redirect:/admin/khachhang";
     }
 
